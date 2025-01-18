@@ -59,7 +59,10 @@ namespace mrover {
 
     void ArmController::velCallback(geometry_msgs::Vector3 const& ik_vel) {
         mVelTarget = {ik_vel.x, ik_vel.y, ik_vel.z};
-        mLastUpdate = ros::Time::now();
+        if (mArmMode == ArmMode::VELOCITY_CONTROL)
+            mLastUpdate = ros::Time::now();
+        else
+            ROS_WARN_STREAM_THROTTLE(1, "Received velocity command in position mode!");
     }
 
     void ArmController::fkCallback(sensor_msgs::JointState const& joint_state) {
@@ -96,7 +99,10 @@ namespace mrover {
         SE3d endEffectorInArmBaseLink = targetFrameToArmBaseLink * endEffectorInTarget;
         SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_target", "arm_base_link", endEffectorInArmBaseLink);
         mPosTarget = endEffectorInArmBaseLink;
-        mLastUpdate = ros::Time::now();
+        if (mArmMode == ArmMode::POSITION_CONTROL)
+            mLastUpdate = ros::Time::now();
+        else
+            ROS_WARN_STREAM_THROTTLE(1, "Received position command in velocity mode!");
     }
 
     auto ArmController::timerCallback() -> void {
