@@ -59,7 +59,10 @@ namespace mrover {
 
     void ArmController::velCallback(geometry_msgs::Vector3 const& ik_vel) {
         mVelTarget = {ik_vel.x, ik_vel.y, ik_vel.z};
-        mLastUpdate = ros::Time::now();
+        if (mArmMode == ArmMode::VELOCITY_CONTROL)
+            mLastUpdate = ros::Time::now();
+        else
+            ROS_WARN_STREAM_THROTTLE(1, "Received velocity command in position mode!");
     }
 
     void ArmController::fkCallback(sensor_msgs::JointState const& joint_state) {
@@ -77,7 +80,7 @@ namespace mrover {
         x += (LINK_DE + END_EFFECTOR_LENGTH) * std::cos(angle);
         z += (LINK_DE + END_EFFECTOR_LENGTH) * std::sin(angle);
         mArmPos = SE3d{{x, y, z}, SO3d{Eigen::Quaterniond{Eigen::AngleAxisd{angle, -R3d::UnitY()}}}};
-
+        SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_fk", "arm_base_link", mArmPos);
     }
 
     auto ArmController::ik_callback(IK const& ik_target) -> void {
@@ -96,7 +99,10 @@ namespace mrover {
         SE3d endEffectorInArmBaseLink = targetFrameToArmBaseLink * endEffectorInTarget;
         SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_target", "arm_base_link", endEffectorInArmBaseLink);
         mPosTarget = endEffectorInArmBaseLink;
-        mLastUpdate = ros::Time::now();
+        if (mArmMode == ArmMode::POSITION_CONTROL)
+            mLastUpdate = ros::Time::now();
+        else
+            ROS_WARN_STREAM_THROTTLE(1, "Received position command in velocity mode!");
     }
 
     auto ArmController::timerCallback() -> void {
@@ -108,9 +114,8 @@ namespace mrover {
         if (mArmMode == ArmMode::POSITION_CONTROL) {
             target = mPosTarget;
         } else {
-            target = SE3d{{mArmPos.translation().x() + mVelTarget.x() * 0.1,
-                           mArmPos.translation().y() + mVelTarget.y() * 0.1,
-                           mArmPos.translation().z() + mVelTarget.z() * 0.1}, mArmPos.asSO3()};
+            // use this order of multiplication to make sure velocity directions are in the right frame
+            target = SE3d{mVelTarget * 0.1, SO3d::Identity()} * mArmPos;
         }
         auto positions = ikCalc(target);
         if (positions) {
