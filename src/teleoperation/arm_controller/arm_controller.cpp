@@ -80,7 +80,7 @@ namespace mrover {
         x += (LINK_DE + END_EFFECTOR_LENGTH) * std::cos(angle);
         z += (LINK_DE + END_EFFECTOR_LENGTH) * std::sin(angle);
         mArmPos = SE3d{{x, y, z}, SO3d{Eigen::Quaterniond{Eigen::AngleAxisd{angle, -R3d::UnitY()}}}};
-
+        SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_fk", "arm_base_link", mArmPos);
     }
 
     auto ArmController::ik_callback(IK const& ik_target) -> void {
@@ -114,9 +114,8 @@ namespace mrover {
         if (mArmMode == ArmMode::POSITION_CONTROL) {
             target = mPosTarget;
         } else {
-            target = SE3d{{mArmPos.translation().x() + mVelTarget.x() * 0.1,
-                           mArmPos.translation().y() + mVelTarget.y() * 0.1,
-                           mArmPos.translation().z() + mVelTarget.z() * 0.1}, mArmPos.asSO3()};
+            // use this order of multiplication to make sure velocity directions are in the right frame
+            target = SE3d{mVelTarget * 0.1, SO3d::Identity()} * mArmPos;
         }
         auto positions = ikCalc(target);
         if (positions) {
