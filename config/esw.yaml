@@ -232,11 +232,12 @@ brushed_motors:
       limit_0_used_for_readjustment: false
       abs_present: true
       abs_is_fwd_polarity: true
-      abs_ratio: 1.0 # encoder ratio compared to motor
-      abs_offset: 0.0 # 0 for joint position corresponds to this radians reading by absolute encoder
+      abs_ratio: -1.0 # encoder ratio compared to motor
+      abs_offset: 2.68 # 0 for joint position corresponds to this radians reading by absolute encoder
       driver_voltage: 10.5 # used to calculate max pwm
       motor_max_voltage: 12.0 # used to calculate max pwm
       limit_max_forward_pos: true
+      limit_0_readjust_position: -1.91 # radians
       min_position: -0.7853981633974483
       max_position: 0.0
       min_velocity: -1.0

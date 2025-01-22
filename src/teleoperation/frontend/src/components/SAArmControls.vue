@@ -43,7 +43,7 @@ import { defineComponent } from 'vue'
 import { mapActions, mapState } from 'vuex'
 import MotorAdjust from './MotorAdjust.vue'
 
-const UPDATE_HZ = 20
+const UPDATE_HZ = 40
 
 export default defineComponent({
   components: {

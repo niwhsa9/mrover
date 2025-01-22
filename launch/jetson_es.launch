@@ -7,8 +7,8 @@
     <param name="dev_path" value="/devices/platform/3610000.xhci/usb1/1-2/1-2.4/1-2.4.4"/>
     <param name="port" value="8083"/>
   </node>
-
-  <!-- <include file="$(find mrover)/launch/zed.launch">
+<!-- 
+  <include file="$(find mrover)/launch/zed.launch">
     <arg name="zed_model" value="zedm"/>
     <arg name="serial_number" value="12046231"/>
   </include> -->

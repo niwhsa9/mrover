@@ -159,7 +159,7 @@ namespace mrover {
             position = std::clamp(position, mMinPosition, mMaxPosition);
 
             moteus::PositionMode::Command command{
-                    .position = position.get(),
+                    .position = position.rep,
                     .velocity = 0.0,
                     .maximum_torque = mMaxTorque,
                     .watchdog_timeout = mWatchdogTimeout,
@@ -214,7 +214,7 @@ namespace mrover {
             } else {
                 moteus::PositionMode::Command command{
                         .position = std::numeric_limits<double>::quiet_NaN(),
-                        .velocity = velocity.get(),
+                        .velocity = velocity.rep,
                         .maximum_torque = mMaxTorque,
                         .watchdog_timeout = mWatchdogTimeout,
                 };

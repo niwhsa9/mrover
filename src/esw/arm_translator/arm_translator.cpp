@@ -102,6 +102,10 @@ namespace mrover {
 
         Position position = *msg;
 
+        for (auto &p : position.positions) {
+            p = p / (2 * std::numbers::pi_v<float>);
+        }
+
         // TODO(quintin): Decrease code duplication
         // If present, replace the entries for DE0 and DE1 with the pitch and roll values respectively
         std::optional<std::size_t> jointDePitchIndex = findJointByName(msg->names, "joint_de_pitch"), jointDeRollIndex = findJointByName(msg->names, "joint_de_roll");
