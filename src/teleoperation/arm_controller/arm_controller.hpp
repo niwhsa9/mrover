@@ -40,13 +40,13 @@ namespace mrover {
         static constexpr double LINK_CD = 0.5531735368;
         static constexpr double LINK_DE = 0.044886000454425812;
         static constexpr double JOINT_A_MIN = 0;
-        static constexpr double JOINT_A_MAX = 0.45;
-        static constexpr double JOINT_B_MIN = -1 * std::numbers::pi / 4;
-        static constexpr double JOINT_B_MAX = 0;
-        static constexpr double JOINT_C_MIN = 1.35;
-        static constexpr double JOINT_C_MAX = 3.19;
-        static constexpr double JOINT_DE_PITCH_MIN = -0.71;
-        static constexpr double JOINT_DE_PITCH_MAX = 0.97;
+        static constexpr double JOINT_A_MAX = 0.4;
+        static constexpr double JOINT_B_MIN = -0.86;
+        static constexpr double JOINT_B_MAX = 0.1;
+        static constexpr double JOINT_C_MIN = 1;
+        static constexpr double JOINT_C_MAX = 2.69;
+        static constexpr double JOINT_DE_PITCH_MIN = -0.7;
+        static constexpr double JOINT_DE_PITCH_MAX = 0.87;
         static constexpr double END_EFFECTOR_LENGTH = 0.13; // measured from blender
         static constexpr double JOINT_C_OFFSET = 0.1608485915;
 

@@ -116,6 +116,7 @@ namespace mrover {
         } else {
             // use this order of multiplication to make sure velocity directions are in the right frame
             target = SE3d{mVelTarget * 0.1, SO3d::Identity()} * mArmPos;
+            SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_target", "arm_base_link", target);
         }
         auto positions = ikCalc(target);
         if (positions) {

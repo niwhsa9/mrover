@@ -102,8 +102,11 @@ namespace mrover {
 
         Position position = *msg;
 
-        for (auto &p : position.positions) {
-            p = p / (2 * std::numbers::pi_v<float>);
+        for (size_t i = 0; i < position.positions.size(); ++i) {
+            if (position.names[i] != "joint_c") {
+                continue;
+            }
+            position.positions[i] = position.positions[i] / (2 * std::numbers::pi_v<float>);
         }
 
         // TODO(quintin): Decrease code duplication
