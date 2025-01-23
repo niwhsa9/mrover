@@ -230,19 +230,19 @@ brushed_motors:
       limit_0_is_active_high: false
       limit_0_limits_fwd: false
       limit_0_used_for_readjustment: false
+      limit_max_forward_pos: true
       abs_present: true
       abs_is_fwd_polarity: true
       abs_ratio: -1.0 # encoder ratio compared to motor
       abs_offset: 2.68 # 0 for joint position corresponds to this radians reading by absolute encoder
       driver_voltage: 10.5 # used to calculate max pwm
       motor_max_voltage: 12.0 # used to calculate max pwm
-      limit_max_forward_pos: true
-      limit_0_readjust_position: -1.91 # radians
       min_position: -0.7853981633974483
       max_position: 0.0
       min_velocity: -1.0
       max_velocity: 1.0
       calibration_throttle: 0.5  # throttle during calibration
+      position_p: 30.0
     allen_key:
       gear_ratio: 30.0 # motor ratio compared to joint, e.g. if 5, then 5 rotations of motor = 1 rotation of joint
       limit_0_present: true
