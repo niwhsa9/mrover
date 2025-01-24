@@ -8,7 +8,7 @@ namespace mrover {
         struct ArmPos {
             double x{0}, y{0}, z{0}, pitch{0}, roll{0};
             auto toSE3() const -> SE3d {
-                return SE3d{{x, y, z,}, SO3d{Eigen::Quaterniond{Eigen::AngleAxisd{pitch, R3d::UnitX()} * Eigen::AngleAxisd{roll, R3d::UnitY()}}}};
+                return SE3d{{x, y, z,}, SO3d{Eigen::Quaterniond{Eigen::AngleAxisd{pitch, R3d::UnitY()} * Eigen::AngleAxisd{roll, R3d::UnitX()}}}};
             }
 
             auto operator+(R3d offset) -> ArmPos& {
