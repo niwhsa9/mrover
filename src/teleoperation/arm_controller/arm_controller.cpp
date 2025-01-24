@@ -1,7 +1,7 @@
 #include "arm_controller.hpp"
 
 namespace mrover {
-    const ros::Duration ArmController::TIMEOUT = ros::Duration(1);
+    const ros::Duration ArmController::TIMEOUT = ros::Duration(0.5);
     
     ArmController::ArmController() {
         mIkSubscriber = mNh.subscribe("ee_pos_cmd", 1, &ArmController::ik_callback, this);
@@ -13,17 +13,12 @@ namespace mrover {
         mLastUpdate = ros::Time::now();
     }
 
-    auto yawSo3(double r) -> SO3d {
-        auto q = Eigen::Quaterniond{Eigen::AngleAxisd{r, R3d::UnitY()}};
-        return {q.normalized()};
-    }
+    auto ArmController::ikCalc(ArmPos target) -> std::optional<Position> {
+        double x = target.x;
+        double y = target.y;
+        double z = target.z;
 
-    auto ArmController::ikCalc(SE3d target) -> std::optional<Position> {
-        double x = target.translation().x();
-        double y = target.translation().y();
-        double z = target.translation().z();
-
-        double gamma = -target.rotation().eulerAngles(2, 1, 0)[1]; // lowk not sure why this - is here
+        double gamma = -target.pitch;
         double x3 = x - (LINK_DE + END_EFFECTOR_LENGTH) * std::cos(gamma);
         double z3 = z - (LINK_DE + END_EFFECTOR_LENGTH) * std::sin(gamma);
 
@@ -44,12 +39,13 @@ namespace mrover {
             q2 >= JOINT_C_MIN && q2 <= JOINT_C_MAX &&
             q3 >= JOINT_DE_PITCH_MIN && q3 <= JOINT_DE_PITCH_MAX) {
             Position positions;
-            positions.names = {"joint_a", "joint_b", "joint_c", "joint_de_pitch"};
+            positions.names = {"joint_a", "joint_b", "joint_c", "joint_de_pitch", "joint_de_roll"};
             positions.positions = {
                     static_cast<float>(y),
                     static_cast<float>(q1),
                     static_cast<float>(q2),
                     static_cast<float>(q3),
+                    static_cast<float>(target.roll),
             };
             return positions;
         }
@@ -79,26 +75,14 @@ namespace mrover {
         angle -= joint_state.position[3] + JOINT_C_OFFSET;
         x += (LINK_DE + END_EFFECTOR_LENGTH) * std::cos(angle);
         z += (LINK_DE + END_EFFECTOR_LENGTH) * std::sin(angle);
-        mArmPos = SE3d{{x, y, z}, SO3d{Eigen::Quaterniond{Eigen::AngleAxisd{angle, -R3d::UnitY()}}}};
-        SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_fk", "arm_base_link", mArmPos);
+        mArmPos = {x, y, z, -angle, joint_state.position[4]}; // x, y, z, pitch, roll
+        SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_fk", "arm_base_link", mArmPos.toSE3());
     }
 
     auto ArmController::ik_callback(IK const& ik_target) -> void {
-        // Position positions;
-        // positions.names = {"joint_a", "joint_b", "joint_c", "joint_de_pitch", "joint_de_roll"};
-        // positions.positions.resize(positions.names.size());
-        SE3d targetFrameToArmBaseLink;
-        try {
-            targetFrameToArmBaseLink = SE3Conversions::fromTfTree(mTfBuffer, ik_target.target.header.frame_id, "arm_base_link");
-        } catch (tf2::TransformException const& exception) {
-            ROS_WARN_STREAM_THROTTLE(1, std::format("Failed to get transform from {} to arm_base_link: {}", ik_target.target.header.frame_id, exception.what()));
-            return;
-        }
-        SE3d endEffectorInTarget{{ik_target.target.pose.position.x, ik_target.target.pose.position.y, ik_target.target.pose.position.z}, 
-                                 SO3d{ik_target.target.pose.orientation.x, ik_target.target.pose.orientation.y, ik_target.target.pose.orientation.z, ik_target.target.pose.orientation.w}};
-        SE3d endEffectorInArmBaseLink = targetFrameToArmBaseLink * endEffectorInTarget;
-        SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_target", "arm_base_link", endEffectorInArmBaseLink);
-        mPosTarget = endEffectorInArmBaseLink;
+        mPosTarget = ik_target;
+        SE3d target = mPosTarget.toSE3();
+        SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_target", "arm_base_link", target);
         if (mArmMode == ArmMode::POSITION_CONTROL)
             mLastUpdate = ros::Time::now();
         else
@@ -110,13 +94,12 @@ namespace mrover {
             ROS_WARN_STREAM_THROTTLE(1, "IK Timed Out");
             return;
         }
-        SE3d target;
+
+        ArmPos target;
         if (mArmMode == ArmMode::POSITION_CONTROL) {
             target = mPosTarget;
         } else {
-            // use this order of multiplication to make sure velocity directions are in the right frame
-            target = SE3d{mVelTarget * 0.1, SO3d::Identity()} * mArmPos;
-            SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_target", "arm_base_link", target);
+            target = mArmPos + mVelTarget * 0.1;
         }
         auto positions = ikCalc(target);
         if (positions) {

@@ -119,16 +119,11 @@ namespace mrover {
     auto SimulatorNodelet::userControls(Clock::duration dt) -> void {
         if (mPublishIk && mIkMode) {
             IK ik;
-            ik.target.header.stamp = ros::Time::now();
-            ik.target.header.frame_id = "arm_base_link";
-            ik.target.pose.position.x = mIkTarget.x();
-            ik.target.pose.position.y = mIkTarget.y();
-            ik.target.pose.position.z = mIkTarget.z();
-            auto orientation = Eigen::Quaterniond{Eigen::AngleAxisd{mIkPitch, -R3d::UnitY()}};
-            ik.target.pose.orientation.w = orientation.w();
-            ik.target.pose.orientation.x = orientation.x();
-            ik.target.pose.orientation.y = orientation.y();
-            ik.target.pose.orientation.z = orientation.z();
+            ik.pos[0] = mIkTarget.x();
+            ik.pos[1] = mIkTarget.y();
+            ik.pos[2] = mIkTarget.z();
+            ik.pitch = mIkPitch;
+            ik.roll = mIkRoll;
             mIkTargetPub.publish(ik);
         }
 

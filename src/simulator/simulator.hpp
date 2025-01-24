@@ -245,6 +245,7 @@ namespace mrover {
         bool mPublishIk = true;
         Eigen::Vector3f mIkTarget{0.98, 0.01, -0.217};
         float mIkPitch{-0.5};
+        float mIkRoll{0};
         bool mIkMode = true;
         Eigen::Vector3f mIkVel{0, 0, 0};
         float mArmSpeed = 1;

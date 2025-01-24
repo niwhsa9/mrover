@@ -91,7 +91,8 @@ namespace mrover {
                     ImGui::SliderFloat("IK Target X", &mIkTarget.x(), 0.f, 1.5f);
                     ImGui::SliderFloat("IK Target Y", &mIkTarget.y(), 0.f, 0.4f);
                     ImGui::SliderFloat("IK Target Z", &mIkTarget.z(), -1.f, 1.f);
-                    ImGui::SliderFloat("IK Pitch", &mIkPitch, -3.14f, 1.5f);
+                    ImGui::SliderFloat("IK Pitch", &mIkPitch, -3.14f, 3.14f);
+                    ImGui::SliderFloat("IK Roll", &mIkRoll, -3.14f, 3.14f);
                 } else
                     ImGui::SliderFloat("Arm Speed", &mArmSpeed, 0, 1);
             }

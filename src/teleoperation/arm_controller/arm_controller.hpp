@@ -5,6 +5,28 @@
 namespace mrover {
 
     class ArmController {
+        struct ArmPos {
+            double x{0}, y{0}, z{0}, pitch{0}, roll{0};
+            auto toSE3() const -> SE3d {
+                return SE3d{{x, y, z,}, SO3d{Eigen::Quaterniond{Eigen::AngleAxisd{pitch, R3d::UnitX()} * Eigen::AngleAxisd{roll, R3d::UnitY()}}}};
+            }
+
+            auto operator+(R3d offset) -> ArmPos& {
+                x += offset.x();
+                y += offset.y();
+                z += offset.z();
+                return *this;
+            }
+
+            auto operator=(IK ik_target) -> ArmPos& {
+                x = ik_target.pos[0];
+                y = ik_target.pos[1];
+                z = ik_target.pos[2];
+                pitch = ik_target.pitch;
+                roll = ik_target.roll;
+                return *this;
+            }
+        };
 
         [[maybe_unused]] ros::Subscriber mIkSubscriber;
         [[maybe_unused]] ros::Subscriber mVelSub;
@@ -18,12 +40,11 @@ namespace mrover {
         ros::Timer mTimer;
         ros::ServiceServer mModeServ;
 
-        auto ikCalc(SE3d target) -> std::optional<Position>;
+        auto ikCalc(ArmPos target) -> std::optional<Position>;
         auto timerCallback() -> void;
-        auto modeCallback(IkMode::Request& req, IkMode::Response& res) -> bool;
 
-        SE3d mArmPos;
-        SE3d mPosTarget;
+        ArmPos mArmPos;
+        ArmPos mPosTarget = {0, -1, 0}; // THIS IS SCUFFED - set y target to -1 to make sure this is position is not reachable
         R3d mVelTarget = {0, 0, 0};
         ros::Time mLastUpdate;
         
@@ -55,6 +76,7 @@ namespace mrover {
         void ik_callback(IK const& new_ik_target);
         void velCallback(geometry_msgs::Vector3 const& ik_vel);
         void fkCallback(sensor_msgs::JointState const& joint_state);
+        auto modeCallback(IkMode::Request& req, IkMode::Response& res) -> bool;
     };
 
 } // namespace mrover
