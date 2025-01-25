@@ -120,8 +120,8 @@ namespace mrover {
 
             position.names[pitchIndex] = "joint_de_0";
             position.names[rollIndex] = "joint_de_1";
-            position.positions[pitchIndex] = motorPositions[0].get();
-            position.positions[rollIndex] = motorPositions[1].get();
+            position.positions[pitchIndex] = RevolutionsPerSecond{motorPositions[0]}.get();
+            position.positions[rollIndex] = RevolutionsPerSecond{motorPositions[1]}.get();
         }
 
         mPositionPub->publish(position);
