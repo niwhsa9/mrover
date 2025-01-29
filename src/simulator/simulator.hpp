@@ -212,6 +212,10 @@ namespace mrover {
         int mArmRightKey = GLFW_KEY_RIGHT;
         int mArmUpKey = GLFW_KEY_SLASH;
         int mArmDownKey = GLFW_KEY_PERIOD;
+        int mArmRollCWKey = GLFW_KEY_SEMICOLON;
+        int mArmRollCCWKey = GLFW_KEY_APOSTROPHE;
+        int mArmPitchUpKey = GLFW_KEY_RIGHT_BRACKET;
+        int mArmPitchDownKey = GLFW_KEY_LEFT_BRACKET;
 
         float mFlySpeed = 5.0f;
         float mRoverLinearSpeed = 1.0f;
@@ -244,10 +248,12 @@ namespace mrover {
 
         bool mPublishIk = true;
         Eigen::Vector3f mIkTarget{0.98, 0.01, -0.217};
-        float mIkPitch{-0.5};
+        float mIkPitch{0.5};
         float mIkRoll{0};
         bool mIkMode = true;
         Eigen::Vector3f mIkVel{0, 0, 0};
+        float mIkPitchVel{0};
+        float mIkRollVel{0};
         float mArmSpeed = 1;
         ros::Publisher mIkTargetPub;
         ros::Publisher mIkVelPub;

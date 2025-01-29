@@ -17,7 +17,7 @@ namespace mrover {
 
         mIkTargetPub = mNh.advertise<IK>("ee_pos_cmd", 1);
 
-        mIkVelPub = mNh.advertise<geometry_msgs::Vector3>("ee_vel_cmd", 1);
+        mIkVelPub = mNh.advertise<geometry_msgs::Twist>("ee_vel_cmd", 1);
 
         mIkModeClient = mNh.serviceClient<IkMode>("ik_mode");
 

@@ -37,7 +37,8 @@ namespace mrover {
             y >= JOINT_A_MIN && y <= JOINT_A_MAX &&
             q1 >= JOINT_B_MIN && q1 <= JOINT_B_MAX &&
             q2 >= JOINT_C_MIN && q2 <= JOINT_C_MAX &&
-            q3 >= JOINT_DE_PITCH_MIN && q3 <= JOINT_DE_PITCH_MAX) {
+            q3 >= JOINT_DE_PITCH_MIN && q3 <= JOINT_DE_PITCH_MAX &&
+            target.roll >= JOINT_DE_ROLL_MIN && target.roll <= JOINT_DE_ROLL_MAX) {
             Position positions;
             positions.names = {"joint_a", "joint_b", "joint_c", "joint_de_pitch", "joint_de_roll"};
             positions.positions = {
@@ -53,8 +54,10 @@ namespace mrover {
 
     }
 
-    void ArmController::velCallback(geometry_msgs::Vector3 const& ik_vel) {
-        mVelTarget = {ik_vel.x, ik_vel.y, ik_vel.z};
+    void ArmController::velCallback(geometry_msgs::Twist const& ik_vel) {
+        mVelTarget = {ik_vel.linear.x, ik_vel.linear.y, ik_vel.linear.z};
+        mPitchVel = ik_vel.angular.y;
+        mRollVel = ik_vel.angular.x;
         if (mArmMode == ArmMode::VELOCITY_CONTROL)
             mLastUpdate = ros::Time::now();
         else
@@ -99,13 +102,32 @@ namespace mrover {
         if (mArmMode == ArmMode::POSITION_CONTROL) {
             target = mPosTarget;
         } else {
-            target = mArmPos + mVelTarget * 0.1;
+            // every second, this increment will happen 30 times (in theory)
+            // so the max velocity is 30 times the constant (in m/s theoretically)
+            // note that |mVelTarget| <= 1
+            target = mPosTarget + mVelTarget * 0.01;
+            target.pitch += mPitchVel * 0.05;
+            target.roll += mRollVel * 0.05;
         }
+        SE3Conversions::pushToTfTree(mTfBroadcaster, "arm_target", "arm_base_link", target.toSE3());
         auto positions = ikCalc(target);
         if (positions) {
             mPositionPublisher.publish(positions.value());
+            // if successful, move the target to the new spot (relevant for velocity control)
+            mPosTarget = target;
         } else {
             ROS_WARN_STREAM_THROTTLE(1, "IK Failed");
+			// if IK failed in velocity mode, we go back to where the target was pre-increment (this should always be a reachable
+			// position because mPosTarget only gets updated in velocity mode if the position is reachable)
+			// this should hopefully get us to the (approximately) closest point that is reachable
+			if (mArmMode == ArmMode::VELOCITY_CONTROL) {
+				positions = ikCalc(mPosTarget);
+				if (positions) {
+					mPositionPublisher.publish(positions.value());
+				} else { // surely this will never happen (because we mPosTarget should always be reachable)
+					ROS_WARN_STREAM_THROTTLE(1, "Velocity control closest point failed");
+				}
+			}
         }
     }
 
@@ -116,6 +138,8 @@ namespace mrover {
         } else {
             ROS_INFO("IK Velocity Control Mode");
             mArmMode = ArmMode::VELOCITY_CONTROL;
+            // when we switch to velocity control mode, set the target to the current position
+            mPosTarget = mArmPos;
         }
         return resp.success = true;
     }
