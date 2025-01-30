@@ -111,10 +111,10 @@ namespace mrover {
             // This is because we may not receive the newest query message from the moteus
             // as a result of either testing or startup.
             if (limitSwitch0Present && !limitSwitch0ActiveHigh) {
-                mMoteusAux2Info |= 0b01;
+                mMoteusAux1Info |= 0b01;
             }
             if (limitSwitch1Present) {
-                mMoteusAux2Info |= 0b10;
+                mMoteusAux1Info |= 0b100;
             }
 
             moteus::Controller::Options options;
@@ -240,11 +240,11 @@ namespace mrover {
 
         auto getPressedLimitSwitchInfo() -> MoteusLimitSwitchInfo {
             if (limitSwitch0Present && limitSwitch0Enabled) {
-                bool gpioState = 0b01 & mMoteusAux2Info;
+                bool gpioState = 0b01 & mMoteusAux1Info;
                 mLimitHit[0] = gpioState == limitSwitch0ActiveHigh;
             }
             if (limitSwitch1Present && limitSwitch1Enabled) {
-                bool gpioState = 0b10 & mMoteusAux2Info;
+                bool gpioState = 0b100 & mMoteusAux1Info;
                 mLimitHit[1] = gpioState == limitSwitch1ActiveHigh;
             }
 
